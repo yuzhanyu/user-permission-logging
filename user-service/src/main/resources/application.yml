@@ -1,0 +1,81 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+spring:
+  shardingsphere:
+    # 启用配置覆盖
+    overwrite: true
+    # 显示SQL日志
+    props:
+      sql-show: true
+
+    datasource:
+      names: ds0, ds1
+      ds0:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/db0?characterEncoding=UTF-8&useSSL=false&useUnicode=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: 234
+      ds1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/db1?characterEncoding=UTF-8&useSSL=false&useUnicode=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: 234
+
+    rules:
+      sharding:
+        tables:
+          users:
+            actual-data-nodes: ds${0..1}.users${0..1}
+            database-strategy:
+              standard:
+                sharding-column: user_id
+                sharding-algorithm-name: db-hash-mod
+            table-strategy:
+              standard:
+                sharding-column: user_id
+                sharding-algorithm-name: table-hash-mod
+            key-generate-strategy:
+              column: user_id
+              key-generator-name: snowflake
+
+        sharding-algorithms:
+          db-hash-mod:
+            type: HASH_MOD
+            props:
+              sharding-count: 2
+          table-hash-mod:
+            type: HASH_MOD
+            props:
+              sharding-count: 2
+
+        key-generators:
+          snowflake:
+            type: SNOWFLAKE
+            props:
+              worker-id: 123
+
+  # 禁用自动数据源配置
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
+  application:
+    name: user-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+  mvc:
+    dispatch-options-request: true
+  main:
+    allow-bean-definition-overriding: true
+
+mybatis:
+  mapper-locations: 'classpath*:/mappers/**/*Mapper.xml'
+  configuration:
+    map-underscore-to-camel-case: true

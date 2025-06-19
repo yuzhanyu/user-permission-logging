@@ -1,0 +1,10 @@
+server:
+  port: 8082
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 5000
+security:
+  rpc-key: SECRET_RPC_KEY # RPC调用密钥
