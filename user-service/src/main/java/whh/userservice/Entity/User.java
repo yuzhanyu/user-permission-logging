@@ -2,8 +2,10 @@ package whh.userservice.Entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Table;
+import java.sql.Timestamp;
 
 
 /**
@@ -12,13 +14,13 @@ import javax.persistence.Table;
  * @Description
  */
 @Data
-@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "users")
 public class User {
-    private Integer userId;
-    private String name;
+    private Long userId;
+    private String username;
     private String password;
     private String email;
     private String phone;
-    private Data gmtCreate;
+    private Timestamp gmtCreate;
 }

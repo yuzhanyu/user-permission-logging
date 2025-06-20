@@ -1,10 +1,37 @@
 server:
   port: 8082
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 3000
-        readTimeout: 5000
-security:
-  rpc-key: SECRET_RPC_KEY # RPC调用密钥
+  servlet:
+    context-path: /
+
+#security:
+#  rpc-key: SECRET_RPC_KEY # RPC调用密钥
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+
+  mvc:
+    dispatch-options-request: true
+  main:
+    allow-bean-definition-overriding: true
+  application:
+      name: permission-service
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/permission?characterEncoding=UTF-8&useSSL=false&useUnicode=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: 234
+
+mybatis:
+  mapper-locations: 'classpath*:/mappers/**/*Mapper.xml'
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    whh.permissionservice.Mapper: DEBUG

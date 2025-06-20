@@ -1,9 +1,10 @@
 package whh.userservice.Mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import whh.userservice.DTO.UserDTO;
 import whh.userservice.Entity.User;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,5 +17,7 @@ public interface UserMapper {
 
     void registerUser(Map<String, Object> params);
     User findByUsername(String name);
-    User findByUsernameAndPwd(@Param("name") String name, @Param("password") String password);
+    List<User> findAllUsers();
+    List<User> findUsers(UserDTO userDTO);
+    User findById(Long userDTO);
 }

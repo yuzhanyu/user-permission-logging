@@ -21,4 +21,7 @@ public interface PermissionService {
 
     // 超管调用：降级用户为普通角色
     void downgradeToUser(Long userId);
+
+    // 获取用户角色码对应的用户ID列表
+    Long[] getUserIdsByRoleCode(String roleCode);
 }
