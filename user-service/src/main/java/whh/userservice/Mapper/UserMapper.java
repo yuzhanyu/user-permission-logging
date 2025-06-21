@@ -1,6 +1,7 @@
 package whh.userservice.Mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import whh.userservice.DTO.UserDTO;
 import whh.userservice.Entity.User;
 
@@ -18,6 +19,10 @@ public interface UserMapper {
     void registerUser(Map<String, Object> params);
     User findByUsername(String name);
     List<User> findAllUsers();
-    List<User> findUsers(UserDTO userDTO);
+    List<User> findUsers(@Param("ids") List<Long> ids);
     User findById(Long userDTO);
+
+    void updateUser(UserDTO userDTO);
+
+    void resetPassword(UserDTO userDTO);
 }

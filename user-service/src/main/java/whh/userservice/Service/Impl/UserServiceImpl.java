@@ -1,8 +1,8 @@
 package whh.userservice.Service.Impl;
 
 import com.github.pagehelper.PageInfo;
-import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -129,14 +129,7 @@ public class UserServiceImpl implements UserService {
 
         // 获取当前用户角色
         String roleCode = userClient.getUserRoleCode(userDTO.getUserId());
-        // 设置分页参数（前端传入）
-        int pageNum = userDTO.getPageNum() != null ? userDTO.getPageNum() : 1;
-        int pageSize = userDTO.getPageSize() != null ? userDTO.getPageSize() : 10;
-
-        // 根据角色构建不同查询条件
-        PageHelper.startPage(pageNum, pageSize);
         List<User> userList=Collections.emptyList();
-
         if ("SUPER_ADMIN".equals(roleCode)) {
             // 超级管理员：查看所有用户
             userList = userMapper.findAllUsers();
@@ -144,20 +137,15 @@ public class UserServiceImpl implements UserService {
             List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
             log.info("获取组织用户ID列表: {}", orgUserIds);
 
-            // 创建查询条件
-            UserDTO queryDTO = new UserDTO();
-            for(int i=0;i<orgUserIds.size();i++){
-                queryDTO.setUserId(orgUserIds.get(i));
-                System.out.println(i);
-            }
-
-            userList = userMapper.findUsers(queryDTO);
+            userList = userMapper.findUsers(orgUserIds);
 
         } else if ("USER".equals(roleCode)) {
             // 普通用户：只能查看自己
             userDTO.setUserId(Long.valueOf(currentUser.getUserId()));
             User user= userMapper.findById(userDTO.getUserId());
-            userList = Collections.singletonList(user);
+            userList=Collections.singletonList(user);
+        }else{
+            log.warn("用户角色无效: {}", roleCode);
         }
 
         // 包装分页结果
@@ -165,15 +153,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUser(UserDTO userDTO,Long userId) {
+    public User getUser(Long userId1,Long userId) {
         //  获取用户信息
-        User currentUser = userMapper.findById(userDTO.getUserId());
+        User currentUser = userMapper.findById(userId1);
         if (currentUser == null) {
             log.warn("用户不存在: {}", currentUser);
         }
         log.info("当前用户: {}", currentUser);
         // 获取当前用户角色
-        String roleCode = userClient.getUserRoleCode(userDTO.getUserId());
+        String roleCode = userClient.getUserRoleCode(userId1);
         User user= null;
         if ("SUPER_ADMIN".equals(roleCode)) {
             // 超级管理员：查看所有用户
@@ -182,29 +170,100 @@ public class UserServiceImpl implements UserService {
             List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
             log.info("获取组织用户ID列表: {}", orgUserIds);
             for(int i=0;i<orgUserIds.size();i++){
-                if(orgUserIds.get(i)==userId){
+                if(orgUserIds.get(i).equals(userId)){
                     user = userMapper.findById(userId);
-                    break;
                 }
             }
-            System.out.println(user);
         } else if ("USER".equals(roleCode)) {
-            if(userId==currentUser.getUserId()){
+            if(currentUser.getUserId().equals(userId)){
                 user = userMapper.findById(userId);
             }
+        }else{
+            return null;
         }
         return user;
     }
 
 
     @Override
-    public Boolean updateUser(Long userId, UserDTO userDtO) {
-        return null;
+    public Boolean updateUser(Long userId,UserDTO userDTO) {
+        //  获取用户信息
+        User currentUser = userMapper.findById(userId);
+        if (currentUser == null) {
+            log.warn("用户不存在: {}", currentUser);
+        }
+        log.info("当前用户: {}", currentUser);
+        // 获取当前用户角色
+        String roleCode = userClient.getUserRoleCode(userId);
+        //重置密码加密
+        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
+        userDTO.setPassword(encryptedPassword);
+        if ("SUPER_ADMIN".equals(roleCode)) {
+            userMapper.updateUser(userDTO);
+            String oldroleCode = userClient.getUserRoleCode(userDTO.getUserId());
+            log.info("用户 {} 角色: {}", userDTO.getUserId(), oldroleCode);
+            String newroleCode = userDTO.getRoleCode();
+            log.info("用户 {} 角色: {}", userDTO.getUserId(), newroleCode);
+            if("USER".equals(oldroleCode)&&"ADMIN".equals(newroleCode)){
+                userClient.upgradeToAdmin(userDTO.getUserId());
+            }else if("ADMIN".equals(oldroleCode)&&"USER".equals(newroleCode)){
+                userClient.downgradeToUser(userDTO.getUserId());
+            }
+            log.info("更新用户: {}", userDTO);
+        } else if ("ADMIN".equals(roleCode)) {
+            List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
+            log.info("获取组织用户ID列表: {}", orgUserIds);
+            for(int i=0;i<orgUserIds.size();i++){
+                if(orgUserIds.get(i).equals(userDTO.getUserId())){
+                    userMapper.updateUser(userDTO);
+                }
+            }
+        }else if ("USER".equals(roleCode)) {
+            if(userDTO.getUserId().equals(currentUser.getUserId())){
+                userMapper.updateUser(userDTO);
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+        log.info("更新用户: {}", userDTO);
+        return true;
     }
 
     @Override
-    public Boolean resetPassword(Long userId, UserDTO userDtO) {
-        return null;
+    public Boolean resetPassword(Long userId, UserDTO userDTO) {
+        //  获取用户信息
+        User currentUser = userMapper.findById(userId);
+        if (currentUser == null) {
+            log.warn("用户不存在: {}", currentUser);
+        }
+        log.info("当前用户: {}", currentUser);
+        // 获取当前用户角色
+        String roleCode = userClient.getUserRoleCode(userId);
+        //重置密码加密
+        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
+        userDTO.setPassword(encryptedPassword);
+        if ("SUPER_ADMIN".equals(roleCode)) {
+            userMapper.resetPassword(userDTO);
+        } else if ("ADMIN".equals(roleCode)) {
+            List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
+            log.info("获取组织用户ID列表: {}", orgUserIds);
+            for(int i=0;i<orgUserIds.size();i++){
+                if(orgUserIds.get(i).equals(userDTO.getUserId())){
+                    userMapper.resetPassword(userDTO);
+                }
+            }
+        }else if ("USER".equals(roleCode)) {
+            if(userDTO.getUserId().equals(currentUser.getUserId())){
+                userMapper.resetPassword(userDTO);
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+        return true;
     }
 
 }

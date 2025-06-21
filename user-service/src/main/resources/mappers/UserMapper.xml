@@ -11,22 +11,25 @@
         select * from users where username=#{username} and password=#{password}
     </select>
     <select id="findById" parameterType="long" resultType="whh.userservice.Entity.User">
-        select user_id , username,password,email,phone,gmt_create from users where user_id=#{userId}
+        select * from users where user_id=#{userId}
     </select>
     <select id="findAllUsers" resultType="whh.userservice.Entity.User">
         select * from users
     </select>
-    <select id="findUsers" resultType="whh.userservice.Entity.User" parameterType="List">
+    <select id="findUsers" resultType="whh.userservice.Entity.User">
         select * from users
-        <where>
-            <if test="userIds != null and userIds.size() > 0">
-                AND user_id IN
-                <foreach item="id" collection="userIds" open="(" separator="," close=")">
+        where
+                user_id IN
+                <foreach item="id" collection="ids" open="(" separator="," close=")">
                     #{id}
                 </foreach>
-            </if>
-        </where>
     </select>
+    <update id="updateUser" parameterType="map">
+        update users set user_id=#{userId}, username=#{username},password=#{password},email=#{email},phone=#{phone} where user_id=#{userId}
+    </update>
+    <update id="resetPassword" parameterType="map">
+        update users set password= #{password} where user_id=#{userId}
+    </update>
 
 
 </mapper>

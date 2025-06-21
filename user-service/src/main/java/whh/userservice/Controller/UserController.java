@@ -1,7 +1,9 @@
 package whh.userservice.Controller;
 
+import com.alibaba.nacos.api.model.v2.Result;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import whh.userservice.Constant.ResultCodeConstant;
 import whh.userservice.DTO.RestResult;
@@ -36,7 +38,7 @@ public class UserController {
     @RequestMapping(value = "/user/register", method = RequestMethod.POST)
     public RestResult<Boolean> registerUser(@RequestBody UserDTO userDtO) {
         Boolean result = userService.registerUser(userDtO);
-        return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_MSG, result);
+        return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_REGISTER, result);
     }
     /**
      * 用户登录
@@ -48,9 +50,9 @@ public class UserController {
     public RestResult<String> login(@RequestBody UserDTO userDtO) {
         String token = userService.loginUser(userDtO);
         if(token==null){
-            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_MSG, null);
+            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_USER_LOGIN, null);
         }else{
-            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_MSG, token);
+            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_LOGIN, token);
         }
     }
     /**
@@ -58,8 +60,6 @@ public class UserController {
      */
     @RequestMapping(value = "/user/users", method = RequestMethod.GET)
     public RestResult<Object> listUsers(
-            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestHeader("Authorization") String token,
             HttpServletResponse response) { // 确保使用正确的注解和名称
 
@@ -69,10 +69,10 @@ public class UserController {
             UserDTO userDTO = new UserDTO();
             userDTO.setUserId(userId);
             PageInfo<User> users = userService.findUsers(userDTO);
-            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_MSG, users);
+            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_GET_USER, users);
         } catch (Exception e) {
             response.setStatus(401);
-            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_MSG, null);
+            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_USER_GET, null);
         }
     }
     /**
@@ -81,33 +81,56 @@ public class UserController {
     @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
     public RestResult<Object> getUser(@RequestHeader("Authorization") String token,
                                       HttpServletResponse response,
-                                      @RequestParam("userId") Long userId) {
+                                      @PathVariable("userId") Long userId) {
         try {
             Map<String, Object> claims = jwtUtil.parseToken(token);
             Long userId1 = (Long) claims.get("userId");
-            UserDTO userDTO = new UserDTO();
-            userDTO.setUserId(userId1);
-            User users = userService.getUser(userDTO, userId);
-            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_MSG, users);
+            User users = userService.getUser(userId1, userId);
+            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_GET_USER, users);
         } catch (Exception e) {
             response.setStatus(401);
-            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_MSG, null);
+            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_USER_GET, null);
         }
     }
     /**
      * 修改用户信息
      */
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.PUT)
-    public RestResult<Object> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDtO) {
-        return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_MSG, null);
+    @Transactional
+    @RequestMapping(value = "/user/update", method = RequestMethod.PUT)
+    public RestResult<Object> updateUser(
+            @RequestBody UserDTO userDTO,
+            @RequestHeader("Authorization") String token,
+                                         HttpServletResponse response) {
+        try {
+            Map<String, Object> claims = jwtUtil.parseToken(token);
+            Long userId1 = (Long) claims.get("userId");
+            userService.updateUser(userId1,userDTO);
+            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_UPDATE_USER, true);
+        } catch (Exception e) {
+            response.setStatus(401);
+            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_USER_UPDATE, false);
+        }
     }
     /**
      * 密码重置
      */
     @RequestMapping(value = "/user/reset-password", method = RequestMethod.POST)
-    public RestResult<Object> resetPassword(@PathVariable Long userId, @RequestBody UserDTO userDtO) {
-        return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_MSG, null);
+    public RestResult<Object> resetPassword(
+            @RequestBody UserDTO userDTO,
+            @RequestHeader("Authorization") String token,
+            HttpServletResponse response) {
+        try {
+            Map<String, Object> claims = jwtUtil.parseToken(token);
+            Long userId1 = (Long) claims.get("userId");
+//            userDTO.setUserId(userId1);
+            userService.resetPassword(userId1,userDTO);
+            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_RESET_PASSWORD, true);
+        } catch (Exception e) {
+            response.setStatus(401);
+            return new RestResult<>(ResultCodeConstant.FAIL, ResultCodeConstant.FAIL_USER_RESET_PASSWORD, false);
+        }
     }
+
 
 
 

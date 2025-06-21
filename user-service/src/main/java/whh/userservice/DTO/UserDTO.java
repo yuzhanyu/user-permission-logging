@@ -22,5 +22,6 @@ public class UserDTO {
     private Integer PageSize;
     private List<Long> userIds;
     private String token;
+    private String roleCode;
 
 }
