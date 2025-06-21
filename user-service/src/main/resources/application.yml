@@ -80,3 +80,7 @@ mybatis:
   mapper-locations: 'classpath*:/mappers/**/*Mapper.xml'
   configuration:
     map-underscore-to-camel-case: true
+rocketmq:
+  name-server: 192.168.19.128:9876
+  producer:
+    group: user-producer-group

@@ -50,13 +50,8 @@ public class UserServiceImpl implements UserService {
         params.put("gmtCreate", LocalDateTime.now());
         try {
             userMapper.registerUser(params);
-            // 获取新注册用户的ID (假设Mapper返回或设置ID)
+            // 获取新注册用户的ID
             Long newUserId = (Long) params.get("id");
-            // 如果Mapper没有返回ID，需要通过用户名查询
-            if (newUserId == null) {
-                User newUser = userMapper.findByUsername(userDTO.getUsername());
-                newUserId = newUser.getUserId();
-            }
             log.info("新用户注册成功: {}, ID: {}", userDTO.getUsername(), newUserId);
             // 调用权限服务绑定默认角色
             bindDefaultRoleForUser(newUserId);
@@ -134,9 +129,9 @@ public class UserServiceImpl implements UserService {
             // 超级管理员：查看所有用户
             userList = userMapper.findAllUsers();
         } else if ("ADMIN".equals(roleCode)) {
+            // 管理员：查看普通用户
             List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
             log.info("获取组织用户ID列表: {}", orgUserIds);
-
             userList = userMapper.findUsers(orgUserIds);
 
         } else if ("USER".equals(roleCode)) {
