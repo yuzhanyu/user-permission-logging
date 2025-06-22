@@ -1,6 +1,5 @@
 package whh.userservice.Controller;
 
-import org.springframework.messaging.support.MessageBuilder;
 import com.github.pagehelper.PageInfo;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,6 @@ import whh.userservice.Service.UserService;
 import whh.userservice.Utils.IpUtils;
 import whh.userservice.Utils.JwtUtil;
 import whh.userservice.Utils.LogUtils;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
@@ -25,7 +23,6 @@ import java.util.Map;
  * @date 2025/6/17
  * @Description
  */
-//@RequestMapping("/user")
 @RestController
 public class UserController {
     @Autowired
@@ -44,12 +41,17 @@ public class UserController {
      * @param userDtO 用户注册信息
      * @return
      */
-
     @RequestMapping(value = "/user/register", method = RequestMethod.POST)
     public RestResult<Boolean> registerUser(@RequestBody UserDTO userDtO) {
         Boolean result = userService.registerUser(userDtO);
-        return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_REGISTER, result);
+        if(result==true){
+            return new RestResult<>(ResultCodeConstant.SUCCESS, ResultCodeConstant.SUCCESS_REGISTER, result);
+        }else{
+            return new RestResult<>(ResultCodeConstant.FAIL,ResultCodeConstant.FAIL_USER_REGISTER,result);
+
+        }
     }
+
     /**
      * 用户登录
      *
@@ -82,7 +84,7 @@ public class UserController {
     @RequestMapping(value = "/user/users", method = RequestMethod.GET)
     public RestResult<Object> listUsers(
             @RequestHeader("Authorization") String token,
-            HttpServletResponse response) { // 确保使用正确的注解和名称
+            HttpServletResponse response) {
 
         try {
             Map<String, Object> claims = jwtUtil.parseToken(token);

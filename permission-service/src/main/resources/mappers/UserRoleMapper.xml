@@ -28,6 +28,7 @@
         SET role_id = #{roleId}
         WHERE id = #{id}
     </update>
+    <!--根据角色ID查询用户ID-->
     <select id="findUserIdsByRoleId" resultType="long">
         SELECT user_id
         FROM user_roles

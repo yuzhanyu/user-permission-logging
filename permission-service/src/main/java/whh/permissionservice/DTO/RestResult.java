@@ -1,8 +1,6 @@
 package whh.permissionservice.DTO;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * @author hanghang

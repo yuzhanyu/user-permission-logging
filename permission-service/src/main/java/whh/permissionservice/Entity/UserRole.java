@@ -28,6 +28,4 @@ public class UserRole {
     @Column(name = "role_id", nullable = false)
     private Integer roleId;
 
-    public UserRole(Long userId, Integer roleId) {
-    }
 }

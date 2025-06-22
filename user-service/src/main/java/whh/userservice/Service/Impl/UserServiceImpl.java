@@ -52,32 +52,18 @@ public class UserServiceImpl implements UserService {
             userMapper.registerUser(params);
             // 获取新注册用户的ID
             Long newUserId = (Long) params.get("id");
+            // 如果Mapper没有返回ID，通过用户名查询
+            if (newUserId == null) {
+                User newUser = userMapper.findByUsername(userDTO.getUsername());
+                newUserId = newUser.getUserId();
+            }
             log.info("新用户注册成功: {}, ID: {}", userDTO.getUsername(), newUserId);
-            // 调用权限服务绑定默认角色
-            bindDefaultRoleForUser(newUserId);
+            userClient.bindDefaultRole(newUserId);
+
             return true;
         } catch (Exception e) {
             log.error("用户注册失败: {}", e.getMessage(), e);
             return false;
-        }
-    }
-    /**
-     * 为用户绑定默认角色
-     * @param userId 用户ID
-     */
-    private void bindDefaultRoleForUser(Long userId) {
-        try {
-            log.debug("为用户 {} 绑定默认角色", userId);
-            userClient.bindDefaultRole(userId);
-            log.info("用户 {} 默认角色绑定成功", userId);
-
-            // 验证角色绑定
-            String roleCode = userClient.getUserRoleCode(userId);
-            log.info("用户 {} 当前角色: {}", userId, roleCode);
-
-        } catch (Exception e) {
-            log.error("绑定默认角色失败 - 用户ID: {}, 错误: {}", userId, e.getMessage());
-            throw new PermissionServiceException("角色绑定服务不可用");
         }
     }
 
@@ -129,9 +115,9 @@ public class UserServiceImpl implements UserService {
             // 超级管理员：查看所有用户
             userList = userMapper.findAllUsers();
         } else if ("ADMIN".equals(roleCode)) {
-            // 管理员：查看普通用户
             List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
             log.info("获取组织用户ID列表: {}", orgUserIds);
+
             userList = userMapper.findUsers(orgUserIds);
 
         } else if ("USER".equals(roleCode)) {
@@ -162,6 +148,7 @@ public class UserServiceImpl implements UserService {
             // 超级管理员：查看所有用户
             user = userMapper.findById(userId);
         } else if ("ADMIN".equals(roleCode)) {
+            // 管理员：查看普通用户
             List<Long> orgUserIds = List.of(userClient.getUserIdsByRoleCode("USER"));
             log.info("获取组织用户ID列表: {}", orgUserIds);
             for(int i=0;i<orgUserIds.size();i++){

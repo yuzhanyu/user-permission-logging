@@ -31,7 +31,6 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    @Transactional
     public void bindDefaultRole(Long userId) {
         // 1. 获取默认角色
         Role defaultRole = roleMapper.findByRoleCode(ROLE_USER)
@@ -67,7 +66,6 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    @Transactional
     public void upgradeToAdmin(Long userId) {
         // 1. 校验用户ID有效性
         if (userId == null || userId <= 0) {
@@ -94,7 +92,6 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    @Transactional
     public void downgradeToUser(Long userId) {
         // 1. 获取普通用户角色
         Role userRole = roleMapper.findByRoleCode(ROLE_USER)

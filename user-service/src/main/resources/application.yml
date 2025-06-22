@@ -81,6 +81,10 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 rocketmq:
-  name-server: 192.168.19.128:9876
+  name-server: 192.168.49.128:9876
   producer:
     group: user-producer-group
+
+springdoc:
+  swagger-ui:
+    path: /swagger

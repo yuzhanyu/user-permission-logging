@@ -1,6 +1,5 @@
 package whh.userservice.Client;
 
-import org.apache.catalina.startup.UserConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +12,6 @@ import whh.userservice.Config.FeignClientConfig;
  * @date 2025/6/19
  * @Description
  */
-//@FeignClient(name = "permission-service", url = "http://127.0.0.1:8082")
 @FeignClient(
         name = "permission-service",
         url = "http://127.0.0.1:8082/permission",  // 从配置读取
